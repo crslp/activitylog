@@ -162,30 +162,31 @@ class ActivitylogResource extends Resource
     {
         return $table
             ->columns([
-                static::getLogNameColumnCompoment(),
-                static::getEventColumnCompoment(),
-                static::getSubjectTypeColumnCompoment(),
-                static::getCauserNameColumnCompoment(),
-                static::getPropertiesColumnCompoment(),
-                static::getCreatedAtColumnCompoment(),
+                static::getLogNameColumnComponent(),
+                static::getEventColumnComponent(),
+                static::getSubjectTypeColumnComponent(),
+                static::getCauserNameColumnComponent(),
+                static::getPropertiesColumnComponent(),
+                static::getCreatedAtColumnComponent(),
             ])
             ->defaultSort(config('filament-activitylog.resources.default_sort_column', 'created_at'), config('filament-activitylog.resources.default_sort_direction', 'asc'))
             ->filters([
                 static::getDateFilterComponent(),
-                static::getEventFilterCompoment(),
+                static::getEventFilterComponent(),
             ]);
     }
 
-    public static function getLogNameColumnCompoment(): Column
+    public static function getLogNameColumnComponent(): Column
     {
         return TextColumn::make('log_name')
             ->label(__('activitylog::tables.columns.log_name.label'))
-            ->badge()
             ->formatStateUsing(fn ($state) => ucwords($state))
-            ->sortable();
+            ->searchable()
+            ->sortable()
+            ->badge();
     }
 
-    public static function getEventColumnCompoment(): Column
+    public static function getEventColumnComponent(): Column
     {
         return TextColumn::make('event')
             ->label(__('activitylog::tables.columns.event.label'))
@@ -198,10 +199,11 @@ class ActivitylogResource extends Resource
                 'deleted' => 'danger',
                 default   => 'primary',
             })
+            ->searchable()
             ->sortable();
     }
 
-    public static function getSubjectTypeColumnCompoment(): Column
+    public static function getSubjectTypeColumnComponent(): Column
     {
         return TextColumn::make('subject_type')
             ->label(__('activitylog::tables.columns.subject_type.label'))
@@ -213,37 +215,41 @@ class ActivitylogResource extends Resource
 
                 return Str::of($state)->afterLast('\\')->headline() . ' # ' . $record->subject_id;
             })
+            ->searchable()
             ->hidden(fn (Livewire $livewire) => $livewire instanceof ActivitylogRelationManager);
     }
 
-    public static function getCauserNameColumnCompoment(): Column
+    public static function getCauserNameColumnComponent(): Column
     {
         return TextColumn::make('causer.name')
             ->label(__('activitylog::tables.columns.causer.label'))
             ->getStateUsing(function (Model $record) {
-
-                if ($record->causer_id == null) {
+                // Check if causer is null or causer_id is null
+                if ($record->causer_id == null || $record->causer == null) {
                     return new HtmlString('&mdash;');
                 }
 
+                // Return the causer's name if causer exists
                 return $record->causer->name;
             })
             ->searchable();
     }
 
-    public static function getPropertiesColumnCompoment(): Column
+    public static function getPropertiesColumnComponent(): Column
     {
         return ViewColumn::make('properties')
+            ->searchable()
             ->label(__('activitylog::tables.columns.properties.label'))
             ->view('activitylog::filament.tables.columns.activity-logs-properties')
             ->toggleable(isToggledHiddenByDefault: true);
     }
 
-    public static function getCreatedAtColumnCompoment(): Column
+    public static function getCreatedAtColumnComponent(): Column
     {
         return TextColumn::make('created_at')
             ->label(__('activitylog::tables.columns.created_at.label'))
             ->dateTime(config('filament-activitylog.datetime_format', 'd/m/Y H:i:s'))
+            ->searchable()
             ->sortable();
     }
 
@@ -283,11 +289,11 @@ class ActivitylogResource extends Resource
             });
     }
 
-    public static function getEventFilterCompoment(): SelectFilter
+    public static function getEventFilterComponent(): SelectFilter
     {
         return SelectFilter::make('event')
             ->label(__('activitylog::tables.filters.event.label'))
-            ->options(static::getModel()::distinct()->pluck('event', 'event'));
+            ->options(static::getModel()::distinct()->pluck('event', 'event')->filter());
     }
 
     public static function getPages(): array

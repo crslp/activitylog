@@ -51,7 +51,7 @@ class TimeLineTitleEntry extends Entry
             ->modifyState(fn ($state) => $this->modifiedTitle($state));
     }
 
-    private function modifiedTitle($state): string|HtmlString
+    private function modifiedTitle($state): string|HtmlString|Closure
     {
         if ($this->configureTitleUsing !== null && $this->shouldConfigureTitleUsing !== null && $this->evaluate($this->shouldConfigureTitleUsing)) {
             return $this->evaluate($this->configureTitleUsing);
@@ -63,7 +63,7 @@ class TimeLineTitleEntry extends Entry
 
                 return new HtmlString(
                     sprintf(
-                        'The <strong>%s</strong> was <strong>%s</strong> by <strong>%s</strong>. <br><small> Updated at: <strong>%s</strong></small>',
+                        __('activitylog::timeline.title.modifiedTitle'),
                         $className,
                         $state['event'],
                         $causerName,
@@ -75,5 +75,4 @@ class TimeLineTitleEntry extends Entry
 
         return '';
     }
-
 }
